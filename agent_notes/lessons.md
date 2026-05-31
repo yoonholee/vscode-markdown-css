@@ -12,10 +12,20 @@ Forcing light mode is whack-a-mole: preview.css overrides `.vscode-dark <tag>`, 
 
 ## md-print (PDF)
 
-Pipeline: pandoc markdown → standalone HTML (MathJax SVG for math, vendored locally) → Chrome headless `--print-to-pdf`, US letter. `tokens.css` + `print.css` passed as two `--css` flags from `$VAULT_CSS_DIR` (default `~/repos/vault/assets/css`).
+Pipeline: pandoc (reader `gfm+tex_math_dollars`, `--mathjax`) → standalone HTML (MathJax SVG, vendored locally) → Chrome headless `--print-to-pdf`, US letter. `tokens.css` + `print.css` passed as two `--css` from `$MD_CSS_DIR` (default `~/repos/vscode-markdown-css`, a plain clone of this repo).
+Reader: `gfm` (not pandoc `markdown`) so a list interrupts a paragraph without a blank line, matching the preview. `--mathjax` is required: without it, complex TeX pandoc can't pre-convert keeps literal `$...$` and renders raw; with it, all math becomes `\(...\)` that MathJax typesets.
 Chrome `--print-to-pdf` **drops `background` by default** — need `print-color-adjust: exact` for header/code fills to appear. (Borders survive; backgrounds don't.)
 A PDF embeds whatever font resolved; substitution is invisible to the reader and changes pagination, which feeds md-print's `--agent` orphan/page-fit introspection. So font determinism matters more for print than screen.
-md-print guards a missing/uninitialized submodule with a clear error; VS Code preview does not (it silently renders unstyled). After a fresh clone: `git submodule update --init`.
+The harness `render.py` mirrors this pipeline; the preview is global via jsdelivr (User-settings `markdown.styles`), so a fresh machine needs the clone for print + the jsdelivr URL for preview, not a submodule.
+
+## Preprocessing (md-print + harness, kept in sync)
+
+Both md-print's `preprocess_markdown` (dotfiles) and `render.py`'s `preprocess` (here) transform markdown before pandoc, so notes render the way the consumers show them, NOT raw pandoc. **They are duplicated and must stay in sync** (no shared module — md-print is in dotfiles, the harness here). The chain, in order:
+1. Drop a leading `---...---` YAML frontmatter block (pandoc/gfm would otherwise render it as text/hr).
+2. Callout headers `> [!type] Title` → `> **Title**` (bold title in the blockquote). pandoc and VS Code's built-in preview don't know Obsidian callouts, so without this the literal `[!type]` shows. Print is now cleaner than the actual preview here (fixing the preview needs a markdown-it plugin in the obsidian-light extension).
+3. Unwrap `[[wikilink]]` / `[[note|alias]]` → text.
+4. Resolve **relative image paths** to absolute `file://` against the note's dir. The HTML renders from a temp dir, so `![](../assets/x.png)` would 404 — this was silently breaking images in every PDF (≈314 image notes).
+Fences are skipped throughout. Tests: dotfiles `test_md_print.py`; structural checks `render.py --check`.
 
 ## Fonts (this machine, fc-list verified 2026-05-30)
 
