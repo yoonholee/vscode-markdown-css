@@ -20,11 +20,13 @@ Rendered from `sample.md` through `tokens.css` + `preview.css`. **Regenerate aft
 
 ## How each is wired
 
-- **Preview:** vault `.vscode/settings.json` → `"markdown.styles": ["assets/css/tokens.css", "assets/css/preview.css"]`. VS Code only loads a local `markdown.styles` file that sits inside a workspace folder, so it lives here in the vault. Edit a file → reload the VS Code window (`Developer: Reload Window`) → reopen preview.
-- **Print:** `md-print.py` (`dotfiles/hosts/laptop/bin/`) passes both files as `--css` (`tokens.css` then `print.css`), resolved from `~/repos/vault/assets/css/` (override with `VAULT_CSS_DIR`). Edit → `md-print <file.md>`.
+Standalone public repo, not tied to any vault.
 
-After any change: run `./screenshot.sh`, then commit here, push, and bump the submodule pointer in the vault.
+- **Preview (global):** VS Code User-settings `markdown.styles` lists two jsdelivr URLs — `tokens.css` then `preview.css` — so the preview is styled in any folder. Edit here → push → purge jsdelivr (`curl https://purge.jsdelivr.net/gh/yoonholee/vscode-markdown-css@main/preview.css`) → bump the `?v=` in User settings so VS Code refetches → reopen preview.
+- **Print (local):** `md-print.py` (`dotfiles/hosts/laptop/bin/`) passes `tokens.css` then `print.css` as two `--css` flags, read from a local clone at `~/repos/vscode-markdown-css` (override with `MD_CSS_DIR`). Edit → `md-print <file.md>` (offline; no CDN). Push to keep jsdelivr in sync for the preview.
+
+After any change: run `./screenshot.sh` and commit `preview.png`.
 
 ## History
 
-Replaced a public `vscode-md-preview-light` GitHub repo served via jsdelivr CDN (User-settings `markdown.styles`). jsdelivr only serves public repos, so making it private forced moving the CSS in-vault. That old repo is now private and superseded (safe to delete). print.css previously lived in dotfiles with hardcoded Helvetica — drift from the house style, now folded onto `tokens.css`.
+Briefly went private (then a vault submodule), because making it private broke jsdelivr delivery — a local `markdown.styles` file only loads inside a workspace folder, so the CSS had to live in the vault. But it's just CSS for VS Code, nothing secret, so it went back to public repo + jsdelivr (global, least machinery) and decoupled from the vault. Earlier still, `print.css` lived in dotfiles with hardcoded Helvetica — drift from the house style, now folded onto `tokens.css`.

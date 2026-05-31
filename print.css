@@ -115,8 +115,8 @@ pre {
   overflow-wrap: anywhere;
 }
 
-pre, code, table, blockquote, figure, img, svg, li {
-  break-inside: avoid;
+pre, code, table, blockquote, figure, img, svg {
+  break-inside: avoid; /* NOT li: break-inside on <li> drops markers/breaks lists in Chrome print */
 }
 
 hr { display: none; }
