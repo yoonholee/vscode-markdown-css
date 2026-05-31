@@ -42,10 +42,21 @@ def sh(*args: str, stdin: str | None = None) -> str:
     return subprocess.run(args, check=True, capture_output=True, text=True, input=stdin).stdout
 
 
-def preprocess(md_text: str) -> str:
-    """Mirror md-print: drop a leading YAML frontmatter block and unwrap [[wikilinks]]
-    (outside code fences), so real vault notes render the way the consumers show them."""
+def preprocess(md_text: str, base: Path | None = None) -> str:
+    """Mirror md-print: drop a leading YAML frontmatter block, unwrap [[wikilinks]], and
+    resolve relative image paths against the note's dir to absolute file:// URIs (the HTML
+    renders from a temp dir, so a relative ../assets/x.png would 404). Code fences untouched."""
     import re
+    from urllib.parse import unquote
+    img = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)")
+
+    def abs_img(m):
+        url = m.group(2)
+        if base is None or re.match(r"^(https?:|file:|data:|/|#)", url):
+            return m.group(0)
+        p = (base / unquote(url)).resolve()
+        return m.group(1) + (p.as_uri() if p.exists() else url)
+
     md_text = re.sub(r"\A---\n.*?\n---\n", "", md_text, count=1, flags=re.DOTALL).lstrip("\n")
     out, in_fence = [], False
     for line in md_text.splitlines():
@@ -53,12 +64,13 @@ def preprocess(md_text: str) -> str:
             in_fence = not in_fence
         if not in_fence:
             line = re.sub(r"\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]", lambda m: m.group(2) or m.group(1), line)
+            line = img.sub(abs_img, line)
         out.append(line)
     return "\n".join(out)
 
 
 def to_html_body(md: Path) -> str:
-    src = preprocess(md.read_text(encoding="utf-8", errors="ignore"))
+    src = preprocess(md.read_text(encoding="utf-8", errors="ignore"), md.resolve().parent)
     # --mathjax makes pandoc emit \(...\)/\[...\] (MathJax-readable) even for complex TeX it
     # can't pre-convert; without it those spans keep literal $...$ and MathJax leaves them raw.
     return sh("pandoc", "-f", READER, "-t", "html", "--mathjax", stdin=src)
