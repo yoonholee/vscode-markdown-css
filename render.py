@@ -49,6 +49,7 @@ def preprocess(md_text: str, base: Path | None = None) -> str:
     import re
     from urllib.parse import unquote
     img = re.compile(r"(!\[[^\]]*\]\()([^)\s]+)")
+    callout = re.compile(r"^(\s*>+\s*)\[!(\w+)\][+-]?\s*(.*)$")  # Obsidian callout header
 
     def abs_img(m):
         url = m.group(2)
@@ -63,6 +64,7 @@ def preprocess(md_text: str, base: Path | None = None) -> str:
         if line.lstrip().startswith(("```", "~~~")):
             in_fence = not in_fence
         if not in_fence:
+            line = callout.sub(lambda m: f"{m.group(1)}**{m.group(3).strip() or m.group(2).capitalize()}**", line)
             line = re.sub(r"\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]", lambda m: m.group(2) or m.group(1), line)
             line = img.sub(abs_img, line)
         out.append(line)
