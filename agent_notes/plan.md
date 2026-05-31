@@ -12,6 +12,10 @@ Sharing is via separate stylesheets (no `@import`): both consumers load `tokens.
 
 Edit workflow: edit here → commit/push in this submodule → bump the pointer in the vault.
 
+## Shipped 2026-05-30
+
+Quick wins 1–4, 6, 7 applied (print-color-adjust, underline links [kept GitHub blue], orphans/widows, break-inside coverage + h5/h6, print blockquote accent bar, tabular-nums in tables). Taste forks resolved: link color = GitHub blue; print measure capped to 90ch. Added `sample.md` + `screenshot.sh` + `preview.png` (item 12, partial — fixture + render, no `just`/lint yet). Remaining: quick win 5 (install Source Code Pro), structural items 8–11, lower-priority + the other taste forks below.
+
 ## Improvement backlog
 
 Synthesized from a 6-axis review (typography, color/a11y, print fidelity, screen↔print parity, maintainability, robustness). Severity·Effort in parens. Several items were flagged independently by multiple axes — those are real.

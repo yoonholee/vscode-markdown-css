@@ -125,6 +125,7 @@ th, td {
   text-align: left;
   vertical-align: top;
   color: var(--color-text) !important;
+  font-variant-numeric: tabular-nums; /* numeric columns align */
 }
 
 .vscode-dark th,
@@ -175,14 +176,14 @@ blockquote {
   hanging-punctuation: first;
 }
 
-/* Links */
+/* Links: GitHub blue, underlined for affordance (color-only fails WCAG 1.4.1) */
 .vscode-dark a,
 a {
   color: var(--color-link) !important;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.15em;
 }
-
-a:hover { text-decoration: underline; }
 
 /* Hide YAML frontmatter (VS Code renders it as table.frontmatter). Metadata stays
    in the file for `vs` search; it just doesn't render in the preview. */
