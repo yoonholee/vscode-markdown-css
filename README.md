@@ -42,6 +42,14 @@ Standalone public repo, not tied to any vault.
 
 After any change: `./render.py --check`, eyeball `out/` if needed, run `./render.py --readme`, commit.
 
+## Wide tables (convention, not CSS)
+
+A table wider than the text column overflows in print / scrolls in preview. That's allowed, but it usually means the data is the wrong shape. **Each table should use its width to make one point** — reshape it rather than shrinking the font or relying on scroll:
+
+- **Transpose** (rows ↔ columns) when there are few entities and many attributes — the usual comparison/benchmark case. The "many" axis becomes the short one, so it fits, and you keep aligned column comparison.
+- **Stack as labeled records** (one block per row: `Attr value · Attr value …`) when there are many entities — never overflows, reads as prose, but you lose column scanning.
+- **Reduce scope / split** into multiple focused tables — a table rarely needs every column; show the few that support the claim and split the rest.
+
 ## History
 
 Briefly went private (then a vault submodule), because making it private broke jsdelivr delivery — a local `markdown.styles` file only loads inside a workspace folder, so the CSS had to live in the vault. But it's just CSS for VS Code, nothing secret, so it went back to public repo + jsdelivr (global, least machinery) and decoupled from the vault. Earlier still, `print.css` lived in dotfiles with hardcoded Helvetica — drift from the house style, now folded onto `tokens.css`.
