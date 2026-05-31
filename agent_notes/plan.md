@@ -1,16 +1,15 @@
-# vault-markdown-css — plan & improvement backlog
+# vscode-markdown-css — plan & improvement backlog
 
 ## What this is
 
-One private repo (`github.com/yoonholee/vault-markdown-css`) for how vault markdown looks, on screen and in print.
-Consumed as a git submodule at `vault/assets/css`.
+One public, standalone repo (`github.com/yoonholee/vscode-markdown-css`) for how markdown looks on screen (VS Code preview) and in print (md-print). Not tied to any vault.
 - `tokens.css` — shared house-style tokens (palette + font families). Loaded first by both consumers.
 - `preview.css` — VS Code built-in Markdown preview (Chromium webview), screen rem sizes, force light, hide frontmatter table.
-- `print.css` — `md-print` PDF: pandoc markdown → standalone HTML → Chrome headless `--print-to-pdf`, US letter.
+- `print.css` — `md-print` PDF: pandoc (gfm reader) → standalone HTML → Chrome headless `--print-to-pdf`, US letter.
 
 Sharing is via separate stylesheets (no `@import`): both consumers load `tokens.css` alongside their leaf file, and `:root` custom properties are global, so a token change reaches both. See `README.md` for wiring; `lessons.md` for the consumer-side gotchas.
 
-Edit workflow: edit here → commit/push in this submodule → bump the pointer in the vault.
+Delivery: preview via jsdelivr (User-settings `markdown.styles`); print reads a local clone (`md-print`, `MD_CSS_DIR`). Edit here → push → purge jsdelivr → bump `?v=` for preview; print is immediate.
 
 ## Shipped 2026-05-30
 
