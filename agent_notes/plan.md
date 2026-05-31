@@ -13,7 +13,7 @@ Delivery: preview via jsdelivr (User-settings `markdown.styles`); print reads a 
 
 ## Shipped 2026-05-30
 
-Quick wins 1–4, 6, 7 applied (print-color-adjust, underline links [kept GitHub blue], orphans/widows, break-inside coverage + h5/h6, print blockquote accent bar, tabular-nums in tables). Taste forks resolved: link color = GitHub blue; print measure capped to 90ch. Added `sample.md` + `screenshot.sh` + `preview.png` (item 12, partial — fixture + render, no `just`/lint yet). Remaining: quick win 5 (install Source Code Pro), structural items 8–11, lower-priority + the other taste forks below.
+Quick wins 1–4, 6, 7 applied (print-color-adjust, underline links [kept GitHub blue], orphans/widows, break-inside coverage + h5/h6, print blockquote accent bar, tabular-nums in tables). Taste forks resolved: link color = GitHub blue; print measure capped to 90ch. Item 12 (verification harness) shipped 2026-05-31: `render.py` renders `fixtures/*.md` through both pipelines to `out/` (preview PNG + print PDF/PNG), `--check` asserts HTML invariants headlessly, `--readme` regenerates `preview.png`. `fixtures/regressions.md` pins the cases that have bitten (list-no-blank-line, nesting, math, tables, tasks, autolinks). Remaining of 12: optional stylelint, a `just` release recipe, `pdffonts` font-substitution assertion. Remaining overall: quick win 5 (install Source Code Pro), structural items 8–11, lower-priority + the taste forks below.
 
 ## Improvement backlog
 
