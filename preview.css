@@ -30,6 +30,7 @@ body {
   padding: 2rem 4rem !important;
   margin: 0 auto;
   max-width: 70ch;
+  overflow-wrap: break-word; /* long unbroken tokens wrap instead of overflowing */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -140,6 +141,7 @@ pre, code {
   font-family: var(--font-mono);
   font-size: 0.85em;
   color: var(--color-text) !important;
+  overflow-wrap: break-word; /* long inline-code tokens wrap */
 }
 
 .vscode-dark code,
@@ -183,6 +185,17 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 0.06em;
   text-underline-offset: 0.15em;
+}
+
+/* Media: images and wide display math fit the column instead of overflowing */
+img {
+  max-width: 100%;
+  height: auto;
+}
+mjx-container,
+.katex-display {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* Hide YAML frontmatter (VS Code renders it as table.frontmatter). Metadata stays

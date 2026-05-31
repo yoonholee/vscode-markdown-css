@@ -31,16 +31,37 @@ ROOT = Path(__file__).resolve().parent
 FIXTURES = ROOT / "fixtures"
 OUT = ROOT / "out"
 READER = "gfm+tex_math_dollars"  # keep in sync with md-print's PANDOC_FORMAT
-MATHJAX = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"
+# Prefer the same vendored MathJax md-print uses (loads via file://, no network race that
+# leaves a long math note half-typeset); fall back to the CDN if it isn't present.
+_VENDORED_MATHJAX = Path.home() / "dotfiles/hosts/laptop/bin/mathjax-tex-svg-full.js"
+MATHJAX = _VENDORED_MATHJAX.as_uri() if _VENDORED_MATHJAX.exists() else "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js"
 CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 
 
-def sh(*args: str) -> str:
-    return subprocess.run(args, check=True, capture_output=True, text=True).stdout
+def sh(*args: str, stdin: str | None = None) -> str:
+    return subprocess.run(args, check=True, capture_output=True, text=True, input=stdin).stdout
+
+
+def preprocess(md_text: str) -> str:
+    """Mirror md-print: drop a leading YAML frontmatter block and unwrap [[wikilinks]]
+    (outside code fences), so real vault notes render the way the consumers show them."""
+    import re
+    md_text = re.sub(r"\A---\n.*?\n---\n", "", md_text, count=1, flags=re.DOTALL).lstrip("\n")
+    out, in_fence = [], False
+    for line in md_text.splitlines():
+        if line.lstrip().startswith(("```", "~~~")):
+            in_fence = not in_fence
+        if not in_fence:
+            line = re.sub(r"\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]", lambda m: m.group(2) or m.group(1), line)
+        out.append(line)
+    return "\n".join(out)
 
 
 def to_html_body(md: Path) -> str:
-    return sh("pandoc", str(md), "-f", READER, "-t", "html")
+    src = preprocess(md.read_text(encoding="utf-8", errors="ignore"))
+    # --mathjax makes pandoc emit \(...\)/\[...\] (MathJax-readable) even for complex TeX it
+    # can't pre-convert; without it those spans keep literal $...$ and MathJax leaves them raw.
+    return sh("pandoc", "-f", READER, "-t", "html", "--mathjax", stdin=src)
 
 
 def page(body: str, css: list[str], body_class: str = "", mathjax: bool = False) -> str:
@@ -71,14 +92,15 @@ def render(md: Path) -> None:
     has_math = 'class="math' in body
     name = md.stem
 
+    math_wait = ["--run-all-compositor-stages-before-draw", "--virtual-time-budget=20000"] if has_math else []
     preview_png = OUT / f"{name}.preview.png"
-    _chrome(page(body, ["tokens.css", "preview.css"], "vscode-body"),
-            "--window-size=860,1600", f"--screenshot={preview_png}")
+    _chrome(page(body, ["tokens.css", "preview.css"], "vscode-body", mathjax=has_math),
+            "--window-size=900,1600", f"--screenshot={preview_png}", *math_wait)
 
     pdf = OUT / f"{name}.print.pdf"
     flags = [f"--print-to-pdf={pdf}", "--no-pdf-header-footer"]
     if has_math:  # let MathJax typeset before the snapshot (mirrors md-print)
-        flags += ["--run-all-compositor-stages-before-draw", "--virtual-time-budget=10000"]
+        flags += ["--run-all-compositor-stages-before-draw", "--virtual-time-budget=20000"]
     _chrome(page(body, ["tokens.css", "print.css"], mathjax=has_math), *flags)
     sh("pdftoppm", "-png", "-r", "110", "-f", "1", "-l", "1", str(pdf), str(OUT / f"{name}.print"))
     print(f"  {name}: out/{name}.preview.png  out/{name}.print-1.png")
@@ -91,6 +113,10 @@ CHECKS = [
       'type="checkbox"', '<del>', 'href="https://example.com'],
      ['Mechanism / understand them - Deepest pain']),  # list must not collapse to a paragraph
     ("showcase", ['<table>', '<ul>', 'type="checkbox"'], []),
+    ("inline", ['class="footnote-ref"', '<del>', '<strong>', '<em>'], ['<em>not italic']),  # escapes stay literal
+    ("markup", ['<a href=', '<img', '<hr', '<strong>'],
+     ['a comment that should not render']),  # HTML comment must not leak
+    ("edge", ['<table>', 'class="math display"', '서람'], []),  # CJK present, math, table
 ]
 
 
@@ -98,7 +124,9 @@ def check() -> int:
     import re
     failures = []
     for stem, must, must_not in CHECKS:
-        html = re.sub(r"\s+", " ", to_html_body(FIXTURES / f"{stem}.md"))  # normalize pandoc line-wraps
+        html = to_html_body(FIXTURES / f"{stem}.md")
+        html = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)  # comments don't render
+        html = re.sub(r"\s+", " ", html)  # normalize pandoc line-wraps
         for s in must:
             if s not in html:
                 failures.append(f"{stem}.md: missing {s!r}")

@@ -17,8 +17,9 @@
   --color-link: #0366d6;
   --color-checkbox-accent: #0b5394;
 
-  /* Type families: serif titles + sans body + mono (house pairing) */
-  --font-heading: "Tiempos Headline", "Source Serif 4", Georgia, serif;
-  --font-body: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: "Source Code Pro", "MonoLisa", monospace;
+  /* Type families: serif titles + sans body + mono (house pairing).
+     "Apple SD Gothic Neo" is the CJK (Korean) fallback before the generic. */
+  --font-heading: "Tiempos Headline", "Source Serif 4", Georgia, "Apple SD Gothic Neo", serif;
+  --font-body: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, "Apple SD Gothic Neo", sans-serif;
+  --font-mono: "Source Code Pro", "MonoLisa", "Apple SD Gothic Neo", monospace;
 }

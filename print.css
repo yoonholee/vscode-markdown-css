@@ -20,6 +20,7 @@ body {
   font-weight: 400;
   color: var(--color-text);
   max-width: 90ch; /* cap measure; ~95ch full-width was past readable */
+  overflow-wrap: break-word; /* long unbroken tokens wrap instead of running off the page */
   orphans: 3; /* Chrome honors these; md-print --agent also hunts orphans */
   widows: 3;
 }
@@ -88,6 +89,7 @@ th, td {
   vertical-align: top;
   padding: 6pt 8pt;
   font-variant-numeric: tabular-nums; /* numeric columns align */
+  overflow-wrap: break-word; /* long tokens in a cell wrap instead of overflowing */
 }
 
 th {
@@ -107,6 +109,12 @@ pre, code {
   -webkit-print-color-adjust: exact;
 }
 
+code {
+  background: var(--color-bg-code); /* inline code in a light box, like the preview */
+  border-radius: 2px;
+  padding: 0.1em 0.3em;
+}
+
 pre {
   border-left: 2px solid var(--color-border-code);
   padding: 0.5em 0.75em;
@@ -115,8 +123,26 @@ pre {
   overflow-wrap: anywhere;
 }
 
+pre code {
+  background: transparent; /* block code: the <pre> carries the styling, not each line */
+  padding: 0;
+}
+
 pre, code, table, blockquote, figure, img, svg {
   break-inside: avoid; /* NOT li: break-inside on <li> drops markers/breaks lists in Chrome print */
+}
+
+img {
+  max-width: 100%; /* images scale to the text column instead of overflowing the page */
+  height: auto;
+}
+
+mjx-container {
+  max-width: 100%; /* wide display equations scale down instead of clipping off the page */
+}
+mjx-container svg {
+  max-width: 100%;
+  height: auto;
 }
 
 hr { display: none; }
